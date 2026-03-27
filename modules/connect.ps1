@@ -2,36 +2,42 @@ function Connect-M365 {
     Write-Host "Microsoft 365 Tenant Connection" -ForegroundColor Cyan
 
     $tenantInput = Read-Host "Enter Tenant ID or primary domain (example: contoso.onmicrosoft.com)"
-    
+
     if ([string]::IsNullOrWhiteSpace($tenantInput)) {
         Write-Host "Tenant input cannot be empty." -ForegroundColor Red
-        return
+        return $false
     }
 
     Import-Module Microsoft.Graph
 
+    # Clear any previous Graph session
     Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
 
     Write-Host "Connecting to tenant: $tenantInput" -ForegroundColor Yellow
-    Write-Host "Use an InPrivate/incognito browser window if needed." -ForegroundColor Yellow
 
-    Connect-MgGraph `
-        -TenantId $tenantInput `
-        -Scopes "User.Read.All","Policy.Read.All","Directory.Read.All" `
-        -UseDeviceAuthentication `
-        -ContextScope Process `
-        -NoWelcome
+    try {
+        Connect-MgGraph `
+            -TenantId $tenantInput `
+            -Scopes "User.Read.All","Policy.Read.All","Directory.Read.All","UserAuthenticationMethod.Read.All" `
+            -ContextScope Process `
+            -NoWelcome `
+            -ErrorAction Stop
 
-    $context = Get-MgContext
-    $org = Get-MgOrganization
+        $context = Get-MgContext -ErrorAction Stop
 
-    if ($null -ne $context) {
-        Write-Host "Connected successfully!" -ForegroundColor Green
-        Write-Host "Account: $($context.Account)"
-        Write-Host "Tenant ID: $($context.TenantId)"
-        Write-Host "Tenant Name: $($org.DisplayName)"
+        if ($null -ne $context) {
+            Write-Host "Connected successfully!" -ForegroundColor Green
+            Write-Host "Account: $($context.Account)"
+            Write-Host "Tenant ID: $($context.TenantId)"
+            return $true
+        }
+        else {
+            Write-Host "Connection failed: no Graph context found." -ForegroundColor Red
+            return $false
+        }
     }
-    else {
-        Write-Host "Connection failed." -ForegroundColor Red
+    catch {
+        Write-Host "Connection failed: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
     }
 }

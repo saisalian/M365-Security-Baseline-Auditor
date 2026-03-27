@@ -27,7 +27,18 @@ This tool enforces explicit tenant selection to ensure accurate and secure audit
 
 ---
 
+### 👤 Identity Audit – MFA Registration Check
+- Retrieves users from the connected tenant
+- Checks registered authentication methods for each user
+- Identifies users without MFA methods configured
+- Separately reports lookup failures for transparency
+
+This check validates MFA registration readiness, not full MFA enforcement. Actual enforcement depends on Conditional Access, Security Defaults, or other authentication controls.
+
+---
+
 ## Status
 - Phase 1 – Project setup ✅
 - Phase 2 – Secure connection module ✅
-- Phase 3 – Identity audit (in progress)
+- Phase 3 – MFA registration audit ✅
+- Phase 4 – Conditional Access audit (next)
