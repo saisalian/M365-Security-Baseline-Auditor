@@ -43,6 +43,15 @@ This check validates MFA registration readiness, not full MFA enforcement. Actua
 - Detects policies that require MFA
 - Detects policies likely intended to block legacy authentication
 
+## Sample Findings
+
+- Detected 13 Conditional Access policies in tenant
+- Identified multiple MFA enforcement policies
+- Detected legacy authentication blocking policies
+- Observed classification limitations (e.g., BYOD policy flagged as legacy auth)
+
+### Notes
+This highlights the need for deeper policy inspection beyond basic condition matching.
 ---
 
 ## Status
