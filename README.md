@@ -37,8 +37,16 @@ This check validates MFA registration readiness, not full MFA enforcement. Actua
 
 ---
 
+### 🛡️ Conditional Access Audit
+- Retrieves Conditional Access policies from the tenant
+- Lists configured policy names
+- Detects policies that require MFA
+- Detects policies likely intended to block legacy authentication
+
+---
+
 ## Status
 - Phase 1 – Project setup ✅
 - Phase 2 – Secure connection module ✅
 - Phase 3 – MFA registration audit ✅
-- Phase 4 – Conditional Access audit (next)
+- Phase 4 – Conditional Access audit ✅

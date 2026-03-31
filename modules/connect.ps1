@@ -18,7 +18,7 @@ function Connect-M365 {
     try {
         Connect-MgGraph `
             -TenantId $tenantInput `
-            -Scopes "User.Read.All","Policy.Read.All","Directory.Read.All","UserAuthenticationMethod.Read.All" `
+            -Scopes "User.Read.All","Directory.Read.All","UserAuthenticationMethod.Read.All","Policy.Read.All","Policy.Read.ConditionalAccess" `
             -ContextScope Process `
             -NoWelcome `
             -ErrorAction Stop
