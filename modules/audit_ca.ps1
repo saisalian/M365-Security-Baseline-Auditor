@@ -7,6 +7,8 @@ function Get-CAClassification {
     $categories = @()
     $reasons = @()
 
+    $policyName = $Policy.DisplayName
+
     $grantControls  = @($Policy.GrantControls.BuiltInControls)
     $clientAppTypes = @($Policy.Conditions.ClientAppTypes)
 
@@ -36,20 +38,26 @@ function Get-CAClassification {
         $reasons += "Grant controls include MFA."
     }
 
-    # 2. Legacy Authentication Control
-    $targetsLegacyClientApps = (
-        $clientAppTypes -contains "exchangeActiveSync" -or
-        $clientAppTypes -contains "other"
-    )
+    # 2. Legacy Authentication Control (refined)
+    $hasExchangeActiveSync = $clientAppTypes -contains "exchangeActiveSync"
+    $hasOtherClientApps    = $clientAppTypes -contains "other"
 
     $hasDeviceRequirement = (
         $grantControls -contains "compliantDevice" -or
         $grantControls -contains "domainJoinedDevice"
     )
 
-    if ($targetsLegacyClientApps -and -not $hasDeviceRequirement) {
+    $nameLooksLegacy = $false
+    if ($policyName -match "(?i)legacy|basic auth|block legacy") {
+        $nameLooksLegacy = $true
+    }
+
+    if (
+        $hasExchangeActiveSync -or
+        ($hasOtherClientApps -and $nameLooksLegacy -and -not $hasDeviceRequirement)
+    ) {
         $categories += "Legacy Authentication Control"
-        $reasons += "Targets legacy client app types."
+        $reasons += "Targets legacy client app types with legacy-auth indicators."
     }
 
     # 3. Device / BYOD Control
@@ -59,7 +67,6 @@ function Get-CAClassification {
     }
 
     # 4. Location-Based Control
-    # Only count if there are specific locations and not just generic/all/default behavior
     $meaningfulLocations = @(
         $includeLocations | Where-Object {
             $_ -and
@@ -84,7 +91,6 @@ function Get-CAClassification {
     $guestConfigured = $false
 
     if ($null -ne $usersIncludeGuestsOrExternal) {
-        # Try to detect only meaningful guest/external targeting
         if ($usersIncludeGuestsOrExternal.IncludeGuestsOrExternalUsers -eq $true) {
             $guestConfigured = $true
         }
@@ -98,30 +104,56 @@ function Get-CAClassification {
         $reasons += "Explicitly targets guest or external users."
     }
 
-    # 7. Session Control
+    # 7. Session Control (refined)
     $hasSessionControl = $false
 
     if ($null -ne $sessionControls) {
+        # Sign-in frequency
         if ($null -ne $sessionControls.SignInFrequency) {
-            $hasSessionControl = $true
-            $reasons += "Uses sign-in frequency session control."
+            $signInFrequency = $sessionControls.SignInFrequency
+
+            if (
+                $null -ne $signInFrequency.Value -or
+                $null -ne $signInFrequency.Type -or
+                $null -ne $signInFrequency.AuthenticationType -or
+                $null -ne $signInFrequency.FrequencyInterval
+            ) {
+                $hasSessionControl = $true
+                $reasons += "Uses sign-in frequency session control."
+            }
         }
 
+        # Persistent browser
         if ($null -ne $sessionControls.PersistentBrowser) {
-            $hasSessionControl = $true
-            $reasons += "Uses persistent browser session control."
+            $persistentBrowser = $sessionControls.PersistentBrowser
+
+            if ($null -ne $persistentBrowser.Mode) {
+                $hasSessionControl = $true
+                $reasons += "Uses persistent browser session control."
+            }
         }
 
-        if ($null -ne $sessionControls.ApplicationEnforcedRestrictions -and
-            $sessionControls.ApplicationEnforcedRestrictions.IsEnabled -eq $true) {
-            $hasSessionControl = $true
-            $reasons += "Uses application enforced restrictions."
+        # Application enforced restrictions
+        if ($null -ne $sessionControls.ApplicationEnforcedRestrictions) {
+            $appRestrictions = $sessionControls.ApplicationEnforcedRestrictions
+
+            if ($appRestrictions.IsEnabled -eq $true) {
+                $hasSessionControl = $true
+                $reasons += "Uses application enforced restrictions."
+            }
         }
 
-        if ($null -ne $sessionControls.CloudAppSecurity -and
-            $null -ne $sessionControls.CloudAppSecurity.CloudAppSecurityType) {
-            $hasSessionControl = $true
-            $reasons += "Uses Defender for Cloud Apps session control."
+        # Defender for Cloud Apps session control
+        if ($null -ne $sessionControls.CloudAppSecurity) {
+            $cloudAppSecurity = $sessionControls.CloudAppSecurity
+
+            if (
+                $null -ne $cloudAppSecurity.CloudAppSecurityType -and
+                $cloudAppSecurity.CloudAppSecurityType -ne "none"
+            ) {
+                $hasSessionControl = $true
+                $reasons += "Uses Defender for Cloud Apps session control."
+            }
         }
     }
 
