@@ -53,8 +53,16 @@ This check validates MFA registration readiness, not full MFA enforcement. Actua
 This highlights the need for deeper policy inspection beyond basic condition matching.
 ---
 
+### 🧠 Conditional Access Effectiveness Assessment
+- Evaluates whether key Conditional Access controls appear to be effectively enforced
+- Highlights gaps such as report-only MFA policies, disabled legacy auth controls, and duplicate policy patterns
+- Produces a human-readable security posture summary
+
+---
+
 ## Status
 - Phase 1 – Project setup ✅
 - Phase 2 – Secure connection module ✅
 - Phase 3 – MFA registration audit ✅
 - Phase 4 – Conditional Access audit ✅
+- Phase 5 - Conditional Access Effectiveness Assessment ✅
