@@ -28,9 +28,9 @@ This tool enforces explicit tenant selection to ensure accurate and secure audit
 ---
 
 ### 👤 Identity Audit – MFA Registration Check
-- Retrieves users from the connected tenant
-- Checks registered authentication methods for each user
-- Identifies users without MFA methods configured
+- Classifies accounts as member, guest, service/shared, or breakglass
+- Separates MFA findings by account type
+- Reduces misleading MFA gap counts caused by treating all identities equally
 - Separately reports lookup failures for transparency
 
 This check validates MFA registration readiness, not full MFA enforcement. Actual enforcement depends on Conditional Access, Security Defaults, or other authentication controls.
@@ -51,6 +51,7 @@ This check validates MFA registration readiness, not full MFA enforcement. Actua
 
 ### Notes
 This highlights the need for deeper policy inspection beyond basic condition matching.
+
 ---
 
 ### 🧠 Conditional Access Effectiveness Assessment
